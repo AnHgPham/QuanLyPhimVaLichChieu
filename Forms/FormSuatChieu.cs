@@ -23,43 +23,45 @@ namespace QuanLyPhimVaLichChieu.Forms
 
         private void InitializeComponent()
         {
-            this.Text = "Quan ly Suat chieu";
+            UITheme.StyleForm(this, "Quản lý Suất chiếu");
             this.Size = new Size(1000, 600);
-            this.StartPosition = FormStartPosition.CenterParent;
-            this.Font = new Font("Segoe UI", 9.5F);
+
+            // === Header ===
+            this.Controls.Add(UITheme.CreateFormHeader("SUẤT CHIẾU", "Quản lý lịch chiếu phim"));
 
             // === TOP: Input Form ===
-            var panelTop = new Panel { Dock = DockStyle.Top, Height = 220, Padding = new Padding(15) };
+            var panelTop = new Panel { Dock = DockStyle.Top, Height = 220, Padding = new Padding(15), BackColor = UITheme.BgCard };
 
-            var lblTitle = new Label { Text = "THONG TIN SUAT CHIEU", Font = new Font("Segoe UI", 13F, FontStyle.Bold), Dock = DockStyle.Top, Height = 35 };
-            panelTop.Controls.Add(lblTitle);
-
-            int y = 45;
-            panelTop.Controls.Add(new Label { Text = "Phim:", Location = new Point(15, y + 3), AutoSize = true, Font = new Font("Segoe UI", 9F, FontStyle.Bold) });
-            cboPhim = new ComboBox { Location = new Point(110, y), Width = 250, DropDownStyle = ComboBoxStyle.DropDownList };
+            int y = 10;
+            panelTop.Controls.Add(UITheme.CreateLabel("Phim:", 15, y + 3));
+            cboPhim = UITheme.CreateComboBox(110, y, 250);
             panelTop.Controls.Add(cboPhim); y += 32;
 
-            panelTop.Controls.Add(new Label { Text = "Phong:", Location = new Point(15, y + 3), AutoSize = true, Font = new Font("Segoe UI", 9F, FontStyle.Bold) });
-            cboPhong = new ComboBox { Location = new Point(110, y), Width = 180, DropDownStyle = ComboBoxStyle.DropDownList };
+            panelTop.Controls.Add(UITheme.CreateLabel("Phòng:", 15, y + 3));
+            cboPhong = UITheme.CreateComboBox(110, y, 180);
             panelTop.Controls.Add(cboPhong); y += 32;
 
-            panelTop.Controls.Add(new Label { Text = "Ngay chieu:", Location = new Point(15, y + 3), AutoSize = true, Font = new Font("Segoe UI", 9F, FontStyle.Bold) });
+            panelTop.Controls.Add(UITheme.CreateLabel("Ngày chiếu:", 15, y + 3));
             dtpNgay = new DateTimePicker { Location = new Point(110, y), Width = 150, Format = DateTimePickerFormat.Short };
             panelTop.Controls.Add(dtpNgay);
 
-            panelTop.Controls.Add(new Label { Text = "Gio:", Location = new Point(280, y + 3), AutoSize = true, Font = new Font("Segoe UI", 9F, FontStyle.Bold) });
-            txtGio = new TextBox { Location = new Point(320, y), Width = 70, Text = "10:00" };
+            panelTop.Controls.Add(UITheme.CreateLabel("Giờ:", 280, y + 3));
+            txtGio = UITheme.CreateTextBox(320, y, 70);
+            txtGio.Text = "10:00";
             panelTop.Controls.Add(txtGio); y += 32;
 
-            panelTop.Controls.Add(new Label { Text = "Gia ve (VND):", Location = new Point(15, y + 3), AutoSize = true, Font = new Font("Segoe UI", 9F, FontStyle.Bold) });
-            txtGiaVe = new TextBox { Location = new Point(110, y), Width = 120, Text = "75000" };
+            panelTop.Controls.Add(UITheme.CreateLabel("Giá vé (VND):", 15, y + 3));
+            txtGiaVe = UITheme.CreateTextBox(110, y, 120);
+            txtGiaVe.Text = "75000";
             panelTop.Controls.Add(txtGiaVe); y += 35;
 
             // Buttons
-            var btnThem = new Button { Text = "Them", Location = new Point(15, y), Width = 70, BackColor = Color.FromArgb(46, 204, 113), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
-            var btnSua = new Button { Text = "Sua", Location = new Point(90, y), Width = 70, BackColor = Color.FromArgb(52, 152, 219), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
-            var btnXoa = new Button { Text = "Xoa", Location = new Point(165, y), Width = 70, BackColor = Color.FromArgb(231, 76, 60), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
-            btnThem.FlatAppearance.BorderSize = 0; btnSua.FlatAppearance.BorderSize = 0; btnXoa.FlatAppearance.BorderSize = 0;
+            var btnThem = UITheme.CreateButton("Thêm", UITheme.AccentGreen, 70);
+            btnThem.Location = new Point(15, y);
+            var btnSua = UITheme.CreateButton("Sửa", UITheme.AccentBlue, 70);
+            btnSua.Location = new Point(90, y);
+            var btnXoa = UITheme.CreateButton("Xóa", UITheme.AccentRed, 70);
+            btnXoa.Location = new Point(165, y);
 
             btnThem.Click += (s, e) => { var (ok, msg) = _bll.Insert(GetFormData()); Msg(ok, msg); if (ok) LoadData(); };
             btnSua.Click += (s, e) => { if (dgv.CurrentRow == null) return; var (ok, msg) = _bll.Update(GetFormData()); Msg(ok, msg); if (ok) LoadData(); };
@@ -67,46 +69,41 @@ namespace QuanLyPhimVaLichChieu.Forms
             {
                 if (dgv.CurrentRow == null) return;
                 var sc = (SuatChieu)dgv.CurrentRow.DataBoundItem;
-                if (MessageBox.Show($"Xoa suat chieu {sc.TenPhim} - {sc.GioChieuStr}?", "Xac nhan", MessageBoxButtons.YesNo) != DialogResult.Yes) return;
+                if (MessageBox.Show($"Xóa suất chiếu {sc.TenPhim} - {sc.GioChieuStr}?", "Xác nhận", MessageBoxButtons.YesNo) != DialogResult.Yes) return;
                 var (ok, msg) = _bll.Delete(sc.MaSuat);
                 Msg(ok, msg); if (ok) LoadData();
             };
             panelTop.Controls.AddRange(new Control[] { btnThem, btnSua, btnXoa });
 
-            // Filter section (right side of top panel)
-            var lblFilter = new Label { Text = "LOC SUAT CHIEU", Font = new Font("Segoe UI", 10F, FontStyle.Bold), Location = new Point(500, 45), AutoSize = true };
+            // Filter section (right side)
+            var lblFilter = new Label { Text = "LỌC SUẤT CHIẾU", Font = new Font("Segoe UI", 10F, FontStyle.Bold), ForeColor = UITheme.Accent, Location = new Point(500, 10), AutoSize = true };
             panelTop.Controls.Add(lblFilter);
 
-            panelTop.Controls.Add(new Label { Text = "Phim:", Location = new Point(500, 75), AutoSize = true });
-            cboLocPhim = new ComboBox { Location = new Point(560, 72), Width = 200, DropDownStyle = ComboBoxStyle.DropDownList };
+            panelTop.Controls.Add(new Label { Text = "Phim:", Location = new Point(500, 40), AutoSize = true, ForeColor = UITheme.TextSecondary });
+            cboLocPhim = UITheme.CreateComboBox(560, 37, 200);
             panelTop.Controls.Add(cboLocPhim);
 
-            chkLocNgay = new CheckBox { Text = "Loc theo ngay:", Location = new Point(500, 105), AutoSize = true };
+            chkLocNgay = new CheckBox { Text = "Lọc theo ngày:", Location = new Point(500, 72), AutoSize = true, ForeColor = UITheme.TextSecondary };
             panelTop.Controls.Add(chkLocNgay);
-            dtpLocNgay = new DateTimePicker { Location = new Point(630, 102), Width = 130, Format = DateTimePickerFormat.Short };
+            dtpLocNgay = new DateTimePicker { Location = new Point(630, 69), Width = 130, Format = DateTimePickerFormat.Short };
             panelTop.Controls.Add(dtpLocNgay);
 
-            var btnLoc = new Button { Text = "Loc", Location = new Point(500, 135), Width = 80, BackColor = Color.FromArgb(52, 152, 219), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
-            btnLoc.FlatAppearance.BorderSize = 0;
+            var btnLoc = UITheme.CreateButton("Lọc", UITheme.AccentBlue, 80);
+            btnLoc.Location = new Point(500, 102);
             btnLoc.Click += (s, e) =>
             {
                 int? maPhim = cboLocPhim.SelectedValue is int v && v > 0 ? v : null;
                 DateTime? ngay = chkLocNgay.Checked ? dtpLocNgay.Value.Date : null;
                 dgv.DataSource = _bll.Search(maPhim, ngay);
-                FormatGrid();
             };
             panelTop.Controls.Add(btnLoc);
 
             this.Controls.Add(panelTop);
 
             // === DataGridView ===
-            dgv = new DataGridView
-            {
-                Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White, BorderStyle = BorderStyle.None, RowHeadersVisible = false
-            };
+            dgv = new DataGridView();
+            UITheme.StyleDataGridView(dgv);
+            dgv.Dock = DockStyle.Fill;
             dgv.SelectionChanged += (s, e) =>
             {
                 if (dgv.CurrentRow == null) return;
@@ -117,6 +114,7 @@ namespace QuanLyPhimVaLichChieu.Forms
                 txtGio.Text = sc.GioChieuStr;
                 txtGiaVe.Text = sc.GiaVe.ToString();
             };
+            dgv.DataBindingComplete += (s, e) => FormatGrid();
             this.Controls.Add(dgv);
             dgv.BringToFront();
         }
@@ -128,7 +126,7 @@ namespace QuanLyPhimVaLichChieu.Forms
             cboPhim.DisplayMember = "TenPhim";
             cboPhim.ValueMember = "MaPhim";
 
-            var filterPhim = new List<Phim> { new Phim { MaPhim = 0, TenPhim = "-- Tat ca --" } };
+            var filterPhim = new List<Phim> { new Phim { MaPhim = 0, TenPhim = "-- Tất cả --" } };
             filterPhim.AddRange(phimList);
             cboLocPhim.DataSource = filterPhim;
             cboLocPhim.DisplayMember = "TenPhim";
@@ -142,23 +140,27 @@ namespace QuanLyPhimVaLichChieu.Forms
         private void LoadData()
         {
             dgv.DataSource = _bll.GetAll();
-            FormatGrid();
         }
 
         private void FormatGrid()
         {
             if (dgv.Columns.Count == 0) return;
-            dgv.Columns["MaSuat"].HeaderText = "Ma"; dgv.Columns["MaSuat"].Width = 40;
-            dgv.Columns["TenPhim"].HeaderText = "Phim";
-            dgv.Columns["TenPhong"].HeaderText = "Phong";
-            dgv.Columns["NgayChieuStr"].HeaderText = "Ngay chieu";
-            dgv.Columns["GioChieuStr"].HeaderText = "Gio";
-            dgv.Columns["GiaVeStr"].HeaderText = "Gia ve";
-            dgv.Columns["MaPhim"].Visible = false;
-            dgv.Columns["MaPhong"].Visible = false;
-            dgv.Columns["NgayChieu"].Visible = false;
-            dgv.Columns["GioChieu"].Visible = false;
-            dgv.Columns["GiaVe"].Visible = false;
+            void SetCol(string name, Action<DataGridViewColumn> action)
+            {
+                var col = dgv.Columns[name];
+                if (col != null) action(col);
+            }
+            SetCol("MaSuat", c => { c.HeaderText = "MÃ"; c.AutoSizeMode = DataGridViewAutoSizeColumnMode.None; c.MinimumWidth = 40; c.Width = 50; });
+            SetCol("TenPhim", c => c.HeaderText = "PHIM");
+            SetCol("TenPhong", c => c.HeaderText = "PHÒNG");
+            SetCol("NgayChieuStr", c => c.HeaderText = "NGÀY CHIẾU");
+            SetCol("GioChieuStr", c => c.HeaderText = "GIỜ");
+            SetCol("GiaVeStr", c => c.HeaderText = "GIÁ VÉ");
+            SetCol("MaPhim", c => c.Visible = false);
+            SetCol("MaPhong", c => c.Visible = false);
+            SetCol("NgayChieu", c => c.Visible = false);
+            SetCol("GioChieu", c => c.Visible = false);
+            SetCol("GiaVe", c => c.Visible = false);
         }
 
         private SuatChieu GetFormData()
@@ -175,6 +177,6 @@ namespace QuanLyPhimVaLichChieu.Forms
             };
         }
 
-        private void Msg(bool ok, string msg) => MessageBox.Show(msg, ok ? "Thanh cong" : "Loi", MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+        private void Msg(bool ok, string msg) => MessageBox.Show(msg, ok ? "Thành công" : "Lỗi", MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
     }
 }

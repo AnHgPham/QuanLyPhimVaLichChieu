@@ -19,44 +19,44 @@ namespace QuanLyPhimVaLichChieu.Forms
 
         private void InitializeComponent()
         {
-            this.Text = "Quan ly Phong chieu";
+            UITheme.StyleForm(this, "Quản lý Phòng chiếu");
             this.Size = new Size(850, 550);
-            this.StartPosition = FormStartPosition.CenterParent;
-            this.Font = new Font("Segoe UI", 9.5F);
 
-            var panelTop = new Panel { Dock = DockStyle.Top, Height = 200, Padding = new Padding(15) };
+            // === Header ===
+            this.Controls.Add(UITheme.CreateFormHeader("PHÒNG CHIẾU", "Quản lý phòng chiếu phim"));
 
-            var lblTitle = new Label { Text = "THONG TIN PHONG CHIEU", Font = new Font("Segoe UI", 13F, FontStyle.Bold), Dock = DockStyle.Top, Height = 35 };
-            panelTop.Controls.Add(lblTitle);
+            // === TOP: Input Form ===
+            var panelTop = new Panel { Dock = DockStyle.Top, Height = 170, Padding = new Padding(15), BackColor = UITheme.BgCard };
 
-            var flow = new FlowLayoutPanel { Dock = DockStyle.Fill, WrapContents = true, Padding = new Padding(0, 10, 0, 0) };
+            var flow = new FlowLayoutPanel { Dock = DockStyle.Fill, WrapContents = true, Padding = new Padding(0, 5, 0, 0), BackColor = Color.Transparent };
 
-            flow.Controls.Add(new Label { Text = "Ten phong:", Width = 80, TextAlign = ContentAlignment.MiddleRight });
-            txtTenPhong = new TextBox { Width = 180 }; flow.Controls.Add(txtTenPhong);
+            flow.Controls.Add(new Label { Text = "Tên phòng:", Width = 80, TextAlign = ContentAlignment.MiddleRight, ForeColor = UITheme.TextSecondary, Font = UITheme.FontBold });
+            txtTenPhong = new TextBox { Width = 180 }; UITheme.StyleTextBox(txtTenPhong); flow.Controls.Add(txtTenPhong);
 
-            flow.Controls.Add(new Label { Text = "Suc chua:", Width = 80, TextAlign = ContentAlignment.MiddleRight });
-            txtSucChua = new TextBox { Width = 80, Text = "50" }; flow.Controls.Add(txtSucChua);
+            flow.Controls.Add(new Label { Text = "Sức chứa:", Width = 80, TextAlign = ContentAlignment.MiddleRight, ForeColor = UITheme.TextSecondary, Font = UITheme.FontBold });
+            txtSucChua = new TextBox { Width = 80, Text = "50" }; UITheme.StyleTextBox(txtSucChua); flow.Controls.Add(txtSucChua);
 
-            flow.Controls.Add(new Label { Text = "Loai:", Width = 80, TextAlign = ContentAlignment.MiddleRight });
+            flow.Controls.Add(new Label { Text = "Loại:", Width = 80, TextAlign = ContentAlignment.MiddleRight, ForeColor = UITheme.TextSecondary, Font = UITheme.FontBold });
             cboLoaiPhong = new ComboBox { Width = 100, DropDownStyle = ComboBoxStyle.DropDownList };
             cboLoaiPhong.Items.AddRange(new object[] { "2D", "3D", "IMAX" });
             cboLoaiPhong.SelectedIndex = 0;
+            UITheme.StyleComboBox(cboLoaiPhong);
             flow.Controls.Add(cboLoaiPhong);
 
-            flow.Controls.Add(new Label { Text = "Trang thai:", Width = 80, TextAlign = ContentAlignment.MiddleRight });
+            flow.Controls.Add(new Label { Text = "Trạng thái:", Width = 80, TextAlign = ContentAlignment.MiddleRight, ForeColor = UITheme.TextSecondary, Font = UITheme.FontBold });
             cboTrangThai = new ComboBox { Width = 120, DropDownStyle = ComboBoxStyle.DropDownList };
-            cboTrangThai.Items.AddRange(new object[] { "Hoat dong", "Bao tri" });
+            cboTrangThai.Items.AddRange(new object[] { "Hoạt động", "Bảo trì" });
             cboTrangThai.SelectedIndex = 0;
+            UITheme.StyleComboBox(cboTrangThai);
             flow.Controls.Add(cboTrangThai);
 
             // Buttons
-            flow.Controls.Add(new Label { Width = 780, Height = 5 }); // spacer
-            btnThem = new Button { Text = "Them", Width = 70, BackColor = Color.FromArgb(46, 204, 113), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
-            btnSua = new Button { Text = "Sua", Width = 70, BackColor = Color.FromArgb(52, 152, 219), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
-            btnXoa = new Button { Text = "Xoa", Width = 70, BackColor = Color.FromArgb(231, 76, 60), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
-            btnLamMoi = new Button { Text = "Lam moi", Width = 80, FlatStyle = FlatStyle.Flat };
-            btnThem.FlatAppearance.BorderSize = 0; btnSua.FlatAppearance.BorderSize = 0;
-            btnXoa.FlatAppearance.BorderSize = 0; btnLamMoi.FlatAppearance.BorderSize = 0;
+            flow.Controls.Add(new Label { Width = 780, Height = 8 });
+            btnThem = UITheme.CreateButton("Thêm", UITheme.AccentGreen, 70);
+            btnSua = UITheme.CreateButton("Sửa", UITheme.AccentBlue, 70);
+            btnXoa = UITheme.CreateButton("Xóa", UITheme.AccentRed, 70);
+            btnLamMoi = UITheme.CreateButton("Làm mới", UITheme.BgInput, 80);
+            btnLamMoi.ForeColor = UITheme.TextSecondary;
             flow.Controls.AddRange(new Control[] { btnThem, btnSua, btnXoa, btnLamMoi });
 
             btnThem.Click += (s, e) => { var (ok, msg) = _bll.Insert(GetFormData()); Show(ok, msg); if (ok) { LoadData(); ClearForm(); } };
@@ -68,13 +68,9 @@ namespace QuanLyPhimVaLichChieu.Forms
             flow.BringToFront();
             this.Controls.Add(panelTop);
 
-            dgv = new DataGridView
-            {
-                Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White, BorderStyle = BorderStyle.None, RowHeadersVisible = false
-            };
+            dgv = new DataGridView();
+            UITheme.StyleDataGridView(dgv);
+            dgv.Dock = DockStyle.Fill;
             dgv.SelectionChanged += (s, e) =>
             {
                 if (dgv.CurrentRow == null) return;
@@ -84,6 +80,7 @@ namespace QuanLyPhimVaLichChieu.Forms
                 cboLoaiPhong.SelectedItem = p.LoaiPhong;
                 cboTrangThai.SelectedItem = p.TrangThai;
             };
+            dgv.DataBindingComplete += (s, e) => FormatGrid();
             this.Controls.Add(dgv);
             dgv.BringToFront();
         }
@@ -91,15 +88,21 @@ namespace QuanLyPhimVaLichChieu.Forms
         private void LoadData()
         {
             dgv.DataSource = _bll.GetAll();
-            if (dgv.Columns.Count > 0)
+        }
+
+        private void FormatGrid()
+        {
+            if (dgv.Columns.Count == 0) return;
+            void SetCol(string name, Action<DataGridViewColumn> action)
             {
-                dgv.Columns["MaPhong"].HeaderText = "Ma";
-                dgv.Columns["MaPhong"].Width = 50;
-                dgv.Columns["TenPhong"].HeaderText = "Ten phong";
-                dgv.Columns["SucChua"].HeaderText = "Suc chua";
-                dgv.Columns["LoaiPhong"].HeaderText = "Loai";
-                dgv.Columns["TrangThai"].HeaderText = "Trang thai";
+                var col = dgv.Columns[name];
+                if (col != null) action(col);
             }
+            SetCol("MaPhong", c => { c.HeaderText = "MÃ"; c.AutoSizeMode = DataGridViewAutoSizeColumnMode.None; c.MinimumWidth = 50; c.Width = 60; });
+            SetCol("TenPhong", c => c.HeaderText = "TÊN PHÒNG");
+            SetCol("SucChua", c => c.HeaderText = "SỨC CHỨA");
+            SetCol("LoaiPhong", c => c.HeaderText = "LOẠI");
+            SetCol("TrangThai", c => c.HeaderText = "TRẠNG THÁI");
         }
 
         private PhongChieu GetFormData() => new PhongChieu
@@ -108,19 +111,19 @@ namespace QuanLyPhimVaLichChieu.Forms
             TenPhong = txtTenPhong.Text.Trim(),
             SucChua = int.TryParse(txtSucChua.Text, out int sc) ? sc : 0,
             LoaiPhong = cboLoaiPhong.SelectedItem?.ToString() ?? "2D",
-            TrangThai = cboTrangThai.SelectedItem?.ToString() ?? "Hoat dong"
+            TrangThai = cboTrangThai.SelectedItem?.ToString() ?? "Hoạt động"
         };
 
         private void BtnXoa_Click(object? s, EventArgs e)
         {
             if (dgv.CurrentRow == null) return;
             var p = (PhongChieu)dgv.CurrentRow.DataBoundItem;
-            if (MessageBox.Show($"Xoa phong '{p.TenPhong}'?", "Xac nhan", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+            if (MessageBox.Show($"Xóa phòng '{p.TenPhong}'?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
             var (ok, msg) = _bll.Delete(p.MaPhong);
             Show(ok, msg); if (ok) { LoadData(); ClearForm(); }
         }
 
         private void ClearForm() { txtTenPhong.Text = ""; txtSucChua.Text = "50"; cboLoaiPhong.SelectedIndex = 0; cboTrangThai.SelectedIndex = 0; }
-        private void Show(bool ok, string msg) => MessageBox.Show(msg, ok ? "Thanh cong" : "Loi", MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+        private void Show(bool ok, string msg) => MessageBox.Show(msg, ok ? "Thành công" : "Lỗi", MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
     }
 }

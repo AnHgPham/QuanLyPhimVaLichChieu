@@ -1,6 +1,5 @@
 using System.Data;
 using QuanLyPhimVaLichChieu.BusinessLogic;
-using QuanLyPhimVaLichChieu.DataAccess;
 
 namespace QuanLyPhimVaLichChieu.Forms
 {
@@ -8,13 +7,8 @@ namespace QuanLyPhimVaLichChieu.Forms
     {
         private Panel panelSidebar = null!;
         private Panel panelContent = null!;
-        private StatusStrip statusStrip = null!;
-        private ToolStripStatusLabel toolStripStatus = null!;
-
-        private static readonly Color SidebarBg = Color.FromArgb(25, 25, 45);
-        private static readonly Color AccentColor = Color.FromArgb(229, 57, 53);
-        private static readonly Color BgColor = Color.FromArgb(240, 243, 247);
-        private static readonly Color CardBg = Color.White;
+        private Button? _activeButton = null;
+        private readonly List<Button> _navButtons = new List<Button>();
 
         public FormMain()
         {
@@ -24,141 +18,180 @@ namespace QuanLyPhimVaLichChieu.Forms
 
         private void InitializeComponent()
         {
-            this.Text = "Quan Ly Phim & Lich Chieu - Movie Manager";
+            this.Text = "Quản Lý Phim & Lịch Chiếu - Movie Manager";
             this.Size = new Size(1200, 750);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.MinimumSize = new Size(1000, 600);
-            this.BackColor = BgColor;
-            this.Font = new Font("Segoe UI", 9.5F);
+            this.BackColor = UITheme.BgDark;
+            this.Font = UITheme.FontBody;
 
-            // Status Strip
-            statusStrip = new StatusStrip();
-            statusStrip.BackColor = Color.FromArgb(18, 18, 35);
-            statusStrip.SizingGrip = false;
-            toolStripStatus = new ToolStripStatusLabel("San sang");
-            toolStripStatus.ForeColor = Color.FromArgb(180, 200, 230);
-            statusStrip.Items.Add(toolStripStatus);
-            this.Controls.Add(statusStrip);
+            // === Sidebar ===
+            panelSidebar = new Panel
+            {
+                Dock = DockStyle.Left,
+                Width = 230,
+                BackColor = UITheme.BgSidebar
+            };
 
-            // Sidebar
-            panelSidebar = new Panel();
-            panelSidebar.Dock = DockStyle.Left;
-            panelSidebar.Width = 210;
-            panelSidebar.BackColor = SidebarBg;
+            // Logo
+            var panelLogo = new Panel { Dock = DockStyle.Top, Height = 80, BackColor = UITheme.BgSidebar };
+            var lblLogo = new Label
+            {
+                Text = "\U0001F3AC MOVIE",
+                Font = new Font("Segoe UI", 18F, FontStyle.Bold),
+                ForeColor = UITheme.Accent,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+            panelLogo.Controls.Add(lblLogo);
+            panelSidebar.Controls.Add(panelLogo);
 
-            var lblTitle = new Label();
-            lblTitle.Text = "MOVIE\nMANAGER";
-            lblTitle.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
-            lblTitle.ForeColor = AccentColor;
-            lblTitle.Dock = DockStyle.Top;
-            lblTitle.Height = 65;
-            lblTitle.TextAlign = ContentAlignment.MiddleCenter;
-            lblTitle.Padding = new Padding(0, 5, 0, 0);
+            // Accent line under logo
+            var logoLine = new Panel { Dock = DockStyle.Top, Height = 1, BackColor = UITheme.Border };
+            panelSidebar.Controls.Add(logoLine);
+            logoLine.BringToFront();
 
-            var accentLine = new Panel();
-            accentLine.Dock = DockStyle.Top;
-            accentLine.Height = 2;
-            accentLine.BackColor = AccentColor;
-
-            var lblNav = new Label();
-            lblNav.Text = "MENU";
-            lblNav.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
-            lblNav.ForeColor = Color.FromArgb(100, 120, 160);
-            lblNav.Dock = DockStyle.Top;
-            lblNav.Height = 30;
-            lblNav.TextAlign = ContentAlignment.BottomLeft;
-            lblNav.Padding = new Padding(20, 0, 0, 5);
-
-            // Buttons (reverse order for Dock=Top)
-            var btnThongKe = CreateSidebarButton("  Thong ke bao cao");
-            btnThongKe.Click += (s, e) => OpenForm(new FormThongKe());
-
-            var btnBanVe = CreateSidebarButton("  Ban ve");
-            btnBanVe.Click += (s, e) => OpenForm(new FormBanVe());
-
-            var btnSuatChieu = CreateSidebarButton("  Suat chieu");
-            btnSuatChieu.Click += (s, e) => OpenForm(new FormSuatChieu());
-
-            var btnPhongChieu = CreateSidebarButton("  Phong chieu");
-            btnPhongChieu.Click += (s, e) => OpenForm(new FormPhongChieu());
-
-            var btnPhim = CreateSidebarButton("  Quan ly phim");
-            btnPhim.Click += (s, e) => OpenForm(new FormPhim());
-
-            var btnDashboard = CreateSidebarButton("  Trang chu");
-            btnDashboard.Click += (s, e) => LoadDashboard();
-
-            panelSidebar.Controls.Add(btnThongKe);
-            panelSidebar.Controls.Add(btnBanVe);
-            panelSidebar.Controls.Add(btnSuatChieu);
-            panelSidebar.Controls.Add(btnPhongChieu);
-            panelSidebar.Controls.Add(btnPhim);
-            panelSidebar.Controls.Add(btnDashboard);
+            // Nav label
+            var lblNav = new Label
+            {
+                Text = "  NAVIGATION",
+                Font = new Font("Segoe UI", 7.5F, FontStyle.Bold),
+                ForeColor = UITheme.TextMuted,
+                Dock = DockStyle.Top,
+                Height = 35,
+                TextAlign = ContentAlignment.BottomLeft,
+                Padding = new Padding(20, 0, 0, 6)
+            };
             panelSidebar.Controls.Add(lblNav);
-            panelSidebar.Controls.Add(accentLine);
-            panelSidebar.Controls.Add(lblTitle);
+            lblNav.BringToFront();
+
+            // Nav buttons (reverse order for Dock=Top)
+            var btnThongKe = CreateNavButton("\U0001F4CA  Thống kê");
+            btnThongKe.Click += (s, e) => { SetActive(btnThongKe); OpenForm(new FormThongKe()); };
+
+            var btnBanVe = CreateNavButton("\U0001F3AB  Bán vé");
+            btnBanVe.Click += (s, e) => { SetActive(btnBanVe); OpenForm(new FormBanVe()); };
+
+            var btnSuatChieu = CreateNavButton("\U0001F4C5  Suất chiếu");
+            btnSuatChieu.Click += (s, e) => { SetActive(btnSuatChieu); OpenForm(new FormSuatChieu()); };
+
+            var btnPhongChieu = CreateNavButton("\U0001F3E0  Phòng chiếu");
+            btnPhongChieu.Click += (s, e) => { SetActive(btnPhongChieu); OpenForm(new FormPhongChieu()); };
+
+            var btnPhim = CreateNavButton("\U0001F3AC  Quản lý phim");
+            btnPhim.Click += (s, e) => { SetActive(btnPhim); OpenForm(new FormPhim()); };
+
+            var btnDashboard = CreateNavButton("\U0001F3E0  Trang chủ");
+            btnDashboard.Click += (s, e) => { SetActive(btnDashboard); LoadDashboard(); };
+
+            // Add in reverse
+            foreach (var btn in new[] { btnThongKe, btnBanVe, btnSuatChieu, btnPhongChieu, btnPhim, btnDashboard })
+            {
+                panelSidebar.Controls.Add(btn);
+                btn.BringToFront();
+                _navButtons.Add(btn);
+            }
+
+            // Bottom info
+            var lblVersion = new Label
+            {
+                Text = "v1.0.0 • Movie Manager",
+                Font = UITheme.FontSmall,
+                ForeColor = UITheme.TextMuted,
+                Dock = DockStyle.Bottom,
+                Height = 35,
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+            panelSidebar.Controls.Add(lblVersion);
+
             this.Controls.Add(panelSidebar);
 
-            // Content Panel
-            panelContent = new Panel();
-            panelContent.Dock = DockStyle.Fill;
-            panelContent.BackColor = BgColor;
-            panelContent.Padding = new Padding(30, 25, 30, 15);
+            // === Content Panel ===
+            panelContent = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = UITheme.BgDark,
+                Padding = new Padding(30, 25, 30, 15)
+            };
             this.Controls.Add(panelContent);
             panelContent.BringToFront();
+
+            // Set dashboard as active initially
+            SetActive(btnDashboard);
         }
 
-        private Button CreateSidebarButton(string text)
+        private Button CreateNavButton(string text)
         {
-            var btn = new Button();
-            btn.Text = text;
-            btn.Dock = DockStyle.Top;
-            btn.Height = 45;
-            btn.FlatStyle = FlatStyle.Flat;
+            var btn = new Button
+            {
+                Text = text,
+                Dock = DockStyle.Top,
+                Height = 46,
+                FlatStyle = FlatStyle.Flat,
+                BackColor = UITheme.BgSidebar,
+                ForeColor = UITheme.TextSecondary,
+                Font = new Font("Segoe UI", 10.5F),
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(18, 0, 0, 0),
+                Cursor = Cursors.Hand
+            };
             btn.FlatAppearance.BorderSize = 0;
-            btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(45, 45, 75);
-            btn.BackColor = SidebarBg;
-            btn.ForeColor = Color.FromArgb(200, 210, 230);
-            btn.Font = new Font("Segoe UI", 10.5F);
-            btn.TextAlign = ContentAlignment.MiddleLeft;
-            btn.Padding = new Padding(15, 0, 0, 0);
-            btn.Cursor = Cursors.Hand;
-            btn.MouseEnter += (s, e) => { btn.ForeColor = Color.White; };
-            btn.MouseLeave += (s, e) => { btn.ForeColor = Color.FromArgb(200, 210, 230); };
+            btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 35, 55);
+            btn.MouseEnter += (s, e) => { if (btn != _activeButton) btn.ForeColor = UITheme.TextPrimary; };
+            btn.MouseLeave += (s, e) => { if (btn != _activeButton) btn.ForeColor = UITheme.TextSecondary; };
             return btn;
+        }
+
+        private void SetActive(Button btn)
+        {
+            // Reset all
+            foreach (var b in _navButtons)
+            {
+                b.BackColor = UITheme.BgSidebar;
+                b.ForeColor = UITheme.TextSecondary;
+                b.Font = new Font("Segoe UI", 10.5F);
+            }
+            // Highlight active
+            _activeButton = btn;
+            btn.BackColor = Color.FromArgb(40, 40, 65);
+            btn.ForeColor = UITheme.Accent;
+            btn.Font = new Font("Segoe UI", 10.5F, FontStyle.Bold);
         }
 
         private void LoadDashboard()
         {
             panelContent.Controls.Clear();
 
-            var container = new Panel();
-            container.Dock = DockStyle.Fill;
-            container.AutoScroll = true;
-            container.BackColor = BgColor;
+            var container = new Panel { Dock = DockStyle.Fill, AutoScroll = true, BackColor = UITheme.BgDark };
 
-            var lblHeading = new Label();
-            lblHeading.Text = "TONG QUAN HE THONG";
-            lblHeading.Font = new Font("Segoe UI", 22F, FontStyle.Bold);
-            lblHeading.ForeColor = Color.FromArgb(25, 25, 45);
-            lblHeading.AutoSize = true;
-            lblHeading.Location = new Point(0, 0);
+            var lblHeading = new Label
+            {
+                Text = "TỔNG QUAN HỆ THỐNG",
+                Font = new Font("Segoe UI", 18F, FontStyle.Bold),
+                ForeColor = UITheme.TextPrimary,
+                AutoSize = true,
+                Location = new Point(0, 0)
+            };
             container.Controls.Add(lblHeading);
 
-            var lblDesc = new Label();
-            lblDesc.Text = "Quan ly phim, lich chieu va ban ve noi bo";
-            lblDesc.Font = new Font("Segoe UI", 10F);
-            lblDesc.ForeColor = Color.FromArgb(130, 140, 160);
-            lblDesc.AutoSize = true;
-            lblDesc.Location = new Point(2, 42);
+            var lblDesc = new Label
+            {
+                Text = "Quản lý phim, lịch chiếu và bán vé nội bộ",
+                Font = new Font("Segoe UI", 10.5F),
+                ForeColor = UITheme.TextMuted,
+                AutoSize = true,
+                Location = new Point(2, 38)
+            };
             container.Controls.Add(lblDesc);
 
-            var panelCards = new FlowLayoutPanel();
-            panelCards.Location = new Point(0, 80);
-            panelCards.Size = new Size(900, 300);
-            panelCards.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            panelCards.WrapContents = true;
-            panelCards.BackColor = Color.Transparent;
+            var panelCards = new FlowLayoutPanel
+            {
+                Location = new Point(0, 85),
+                Size = new Size(900, 300),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                WrapContents = true,
+                BackColor = Color.Transparent
+            };
 
             try
             {
@@ -167,55 +200,84 @@ namespace QuanLyPhimVaLichChieu.Forms
                 if (dt.Rows.Count > 0)
                 {
                     var row = dt.Rows[0];
-                    panelCards.Controls.Add(CreateCard("Tong phim", row["TongPhim"].ToString()!, Color.FromArgb(52, 152, 219), "Trong he thong"));
-                    panelCards.Controls.Add(CreateCard("Tong phong", row["TongPhong"].ToString()!, Color.FromArgb(155, 89, 182), "Phong chieu"));
-                    panelCards.Controls.Add(CreateCard("Suat chieu", row["TongSuatChieu"].ToString()!, Color.FromArgb(46, 204, 113), "Tat ca"));
-                    panelCards.Controls.Add(CreateCard("Ve hom nay", row["VeHomNay"].ToString()!, Color.FromArgb(241, 196, 15), DateTime.Now.ToString("dd/MM")));
-                    panelCards.Controls.Add(CreateCard("Tong ve ban", row["TongVe"].ToString()!, Color.FromArgb(231, 76, 60), "Ve"));
-                    panelCards.Controls.Add(CreateCard("Doanh thu", (Convert.ToInt64(row["TongDoanhThu"]) / 1000).ToString("N0") + "K", Color.FromArgb(26, 188, 156), "VND"));
+                    panelCards.Controls.Add(CreateCard("TỔNG PHIM", row["TongPhim"].ToString()!, UITheme.AccentBlue, "Trong hệ thống"));
+                    panelCards.Controls.Add(CreateCard("PHÒNG CHIẾU", row["TongPhong"].ToString()!, UITheme.Accent, "Phòng"));
+                    panelCards.Controls.Add(CreateCard("SUẤT CHIẾU", row["TongSuatChieu"].ToString()!, UITheme.AccentGreen, "Tất cả"));
+                    panelCards.Controls.Add(CreateCard("VÉ HÔM NAY", row["VeHomNay"].ToString()!, UITheme.AccentYellow, DateTime.Now.ToString("dd/MM")));
+                    panelCards.Controls.Add(CreateCard("TỔNG VÉ BÁN", row["TongVe"].ToString()!, UITheme.AccentRed, "Vé"));
+                    panelCards.Controls.Add(CreateCard("DOANH THU", (Convert.ToInt64(row["TongDoanhThu"]) / 1000).ToString("N0") + "K", UITheme.AccentCyan, "VND"));
                 }
             }
             catch (Exception ex)
             {
-                var lblError = new Label();
-                lblError.Text = $"Khong the ket noi database!\n\nVui long kiem tra:\n1. SQL Server da khoi dong\n2. Database QuanLyPhimDB da duoc tao\n3. Connection string trong App.config\n\nLoi: {ex.Message}";
-                lblError.Font = new Font("Segoe UI", 11F);
-                lblError.ForeColor = Color.FromArgb(180, 60, 50);
-                lblError.AutoSize = true;
-                lblError.MaximumSize = new Size(600, 0);
-                lblError.Location = new Point(0, 80);
+                var lblError = new Label
+                {
+                    Text = $"Không thể kết nối database!\n\nVui lòng kiểm tra:\n1. SQL Server đã khởi động\n2. Database QuanLyPhimDB đã được tạo\n3. Connection string trong App.config\n\nLỗi: {ex.Message}",
+                    Font = new Font("Segoe UI", 11F),
+                    ForeColor = UITheme.AccentRed,
+                    AutoSize = true,
+                    MaximumSize = new Size(600, 0),
+                    Location = new Point(0, 80)
+                };
                 container.Controls.Add(lblError);
             }
 
             container.Controls.Add(panelCards);
             panelContent.Controls.Add(container);
-            toolStripStatus.Text = "Trang chu - Dashboard";
         }
 
-        private Panel CreateCard(string title, string value, Color color, string subtitle)
+        private Panel CreateCard(string title, string value, Color accentColor, string subtitle)
         {
-            var card = new Panel();
-            card.Size = new Size(210, 110);
-            card.BackColor = CardBg;
-            card.Margin = new Padding(0, 0, 15, 15);
+            var card = new Panel
+            {
+                Size = new Size(210, 120),
+                BackColor = UITheme.BgCard,
+                Margin = new Padding(0, 0, 15, 15)
+            };
 
-            var colorBar = new Panel();
-            colorBar.Dock = DockStyle.Top;
-            colorBar.Height = 4;
-            colorBar.BackColor = color;
-            card.Controls.Add(colorBar);
+            // Top accent bar
+            var bar = new Panel { Dock = DockStyle.Top, Height = 3, BackColor = accentColor };
+            card.Controls.Add(bar);
 
-            var lblT = new Label { Text = title, Font = new Font("Segoe UI", 9F, FontStyle.Bold), ForeColor = Color.FromArgb(100, 110, 130), Location = new Point(15, 14), AutoSize = true };
+            var lblT = new Label
+            {
+                Text = title,
+                Font = new Font("Segoe UI", 8F, FontStyle.Bold),
+                ForeColor = UITheme.TextMuted,
+                Location = new Point(16, 16),
+                AutoSize = true
+            };
             card.Controls.Add(lblT);
 
-            var lblV = new Label { Text = value, Font = new Font("Segoe UI", 20F, FontStyle.Bold), ForeColor = color, Location = new Point(15, 36), AutoSize = true };
+            var lblV = new Label
+            {
+                Text = value,
+                Font = new Font("Segoe UI", 24F, FontStyle.Bold),
+                ForeColor = accentColor,
+                Location = new Point(16, 38),
+                AutoSize = true
+            };
             card.Controls.Add(lblV);
 
-            var lblS = new Label { Text = subtitle, Font = new Font("Segoe UI", 8.5F), ForeColor = Color.FromArgb(160, 170, 185), Location = new Point(15, 85), AutoSize = true };
+            var lblS = new Label
+            {
+                Text = subtitle,
+                Font = UITheme.FontSmall,
+                ForeColor = UITheme.TextMuted,
+                Location = new Point(16, 92),
+                AutoSize = true
+            };
             card.Controls.Add(lblS);
 
-            card.MouseEnter += (s, e) => card.BackColor = Color.FromArgb(245, 248, 255);
-            card.MouseLeave += (s, e) => card.BackColor = CardBg;
+            // Hover effect
+            card.MouseEnter += (s, e) => card.BackColor = Color.FromArgb(50, 52, 72);
+            card.MouseLeave += (s, e) => card.BackColor = UITheme.BgCard;
+            foreach (Control c in card.Controls)
+            {
+                c.MouseEnter += (s, e) => card.BackColor = Color.FromArgb(50, 52, 72);
+                c.MouseLeave += (s, e) => card.BackColor = UITheme.BgCard;
+            }
+
             return card;
         }
 

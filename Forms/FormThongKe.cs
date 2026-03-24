@@ -17,45 +17,81 @@ namespace QuanLyPhimVaLichChieu.Forms
 
         private void InitializeComponent()
         {
-            this.Text = "Thong ke bao cao";
+            UITheme.StyleForm(this, "Thống kê báo cáo");
             this.Size = new Size(800, 550);
-            this.StartPosition = FormStartPosition.CenterParent;
-            this.Font = new Font("Segoe UI", 9.5F);
 
-            // === Header ===
-            var panelHeader = new Panel { Dock = DockStyle.Top, Height = 100, BackColor = Color.FromArgb(25, 25, 45), Padding = new Padding(20) };
+            // === Header with stats ===
+            var panelHeader = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 110,
+                BackColor = UITheme.BgSidebar,
+                Padding = new Padding(25, 15, 20, 10)
+            };
 
-            var lblTitle = new Label { Text = "THONG KE VE BAN THEO PHIM", Font = new Font("Segoe UI", 16F, FontStyle.Bold), ForeColor = Color.White, Location = new Point(20, 10), AutoSize = true };
+            var lblTitle = new Label
+            {
+                Text = "\U0001F4CA  THỐNG KÊ VÉ BÁN THEO PHIM",
+                Font = new Font("Segoe UI", 16F, FontStyle.Bold),
+                ForeColor = UITheme.TextPrimary,
+                Location = new Point(25, 12),
+                AutoSize = true
+            };
             panelHeader.Controls.Add(lblTitle);
 
-            lblTongVe = new Label { Text = "Tong ve: 0", Font = new Font("Segoe UI", 11F, FontStyle.Bold), ForeColor = Color.FromArgb(46, 204, 113), Location = new Point(20, 50), AutoSize = true };
+            lblTongVe = new Label
+            {
+                Text = "Tổng vé: 0",
+                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                ForeColor = UITheme.AccentGreen,
+                Location = new Point(25, 55),
+                AutoSize = true
+            };
             panelHeader.Controls.Add(lblTongVe);
 
-            lblTongDoanhThu = new Label { Text = "Doanh thu: 0 VND", Font = new Font("Segoe UI", 11F, FontStyle.Bold), ForeColor = Color.FromArgb(241, 196, 15), Location = new Point(250, 50), AutoSize = true };
+            lblTongDoanhThu = new Label
+            {
+                Text = "Doanh thu: 0 VND",
+                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                ForeColor = UITheme.AccentYellow,
+                Location = new Point(250, 55),
+                AutoSize = true
+            };
             panelHeader.Controls.Add(lblTongDoanhThu);
 
-            var btnRefresh = new Button
-            {
-                Text = "Lam moi", Location = new Point(600, 50), Width = 100, Height = 30,
-                BackColor = Color.FromArgb(52, 152, 219), ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand
-            };
-            btnRefresh.FlatAppearance.BorderSize = 0;
+            var btnRefresh = UITheme.CreateButton("Làm mới", UITheme.AccentBlue, 100);
+            btnRefresh.Location = new Point(600, 52);
             btnRefresh.Click += (s, e) => LoadData();
             panelHeader.Controls.Add(btnRefresh);
+
+            // Accent line
+            var line = new Panel { Dock = DockStyle.Bottom, Height = 2, BackColor = UITheme.Accent };
+            panelHeader.Controls.Add(line);
 
             this.Controls.Add(panelHeader);
 
             // === DataGridView ===
-            dgv = new DataGridView
-            {
-                Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White, BorderStyle = BorderStyle.None, RowHeadersVisible = false
-            };
+            dgv = new DataGridView();
+            UITheme.StyleDataGridView(dgv);
+            dgv.Dock = DockStyle.Fill;
+            dgv.DataBindingComplete += (s, e) => FormatGrid();
             this.Controls.Add(dgv);
             dgv.BringToFront();
+        }
+
+        private void FormatGrid()
+        {
+            if (dgv.Columns.Count == 0) return;
+            void SetCol(string name, Action<DataGridViewColumn> action)
+            {
+                var col = dgv.Columns[name];
+                if (col != null) action(col);
+            }
+            SetCol("MaPhim", c => { c.HeaderText = "MÃ"; c.AutoSizeMode = DataGridViewAutoSizeColumnMode.None; c.MinimumWidth = 40; c.Width = 50; });
+            SetCol("TenPhim", c => c.HeaderText = "TÊN PHIM");
+            SetCol("TenTheLoai", c => c.HeaderText = "THỂ LOẠI");
+            SetCol("SoVeBan", c => { c.HeaderText = "SỐ VÉ BÁN"; c.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter; });
+            SetCol("DoanhThu", c => { c.HeaderText = "DOANH THU (VND)"; c.DefaultCellStyle.Format = "N0"; c.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; });
         }
 
         private void LoadData()
@@ -65,20 +101,6 @@ namespace QuanLyPhimVaLichChieu.Forms
                 DataTable dt = _bll.ThongKeVeTheoPhim();
                 dgv.DataSource = dt;
 
-                if (dgv.Columns.Count > 0)
-                {
-                    dgv.Columns["MaPhim"].HeaderText = "Ma";
-                    dgv.Columns["MaPhim"].Width = 40;
-                    dgv.Columns["TenPhim"].HeaderText = "Ten phim";
-                    dgv.Columns["TenTheLoai"].HeaderText = "The loai";
-                    dgv.Columns["SoVeBan"].HeaderText = "So ve ban";
-                    dgv.Columns["SoVeBan"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-                    dgv.Columns["DoanhThu"].HeaderText = "Doanh thu (VND)";
-                    dgv.Columns["DoanhThu"].DefaultCellStyle.Format = "N0";
-                    dgv.Columns["DoanhThu"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
-                }
-
-                // Calculate totals
                 int tongVe = 0;
                 long tongDoanhThu = 0;
                 foreach (DataRow row in dt.Rows)
@@ -86,12 +108,12 @@ namespace QuanLyPhimVaLichChieu.Forms
                     tongVe += Convert.ToInt32(row["SoVeBan"]);
                     tongDoanhThu += Convert.ToInt64(row["DoanhThu"]);
                 }
-                lblTongVe.Text = $"Tong ve: {tongVe}";
+                lblTongVe.Text = $"Tổng vé: {tongVe}";
                 lblTongDoanhThu.Text = $"Doanh thu: {tongDoanhThu:N0} VND";
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Loi: {ex.Message}", "Loi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Lỗi: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }
