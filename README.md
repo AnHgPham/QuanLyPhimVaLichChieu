@@ -17,7 +17,7 @@ QuanLyPhimVaLichChieu/
 ├── DataAccess/      # Tầng truy cập dữ liệu (DAL)
 ├── BusinessLogic/   # Tầng xử lý nghiệp vụ (BLL)
 ├── Forms/           # Giao diện WinForms + UITheme
-├── Database/        # Script tạo CSDL SQL Server
+├── Database/        # Script tạo CSDL MySQL
 ├── Program.cs       # Entry point
 └── App.config       # Cấu hình connection string
 ```
@@ -25,27 +25,29 @@ QuanLyPhimVaLichChieu/
 ## ⚙️ Yêu cầu
 
 - [.NET 6 SDK](https://dotnet.microsoft.com/download/dotnet/6.0) trở lên
-- **SQL Server Express** (hoặc SQL Server bất kỳ)
+- **MySQL 8.0+** (hoặc MariaDB)
 
 ## 🚀 Hướng dẫn chạy
 
 ### 1. Tạo cơ sở dữ liệu
 
 ```bash
-sqlcmd -S localhost\SQLEXPRESS01 -i "Database/CreateDatabase.sql"
+mysql -u root -p < Database/CreateDatabase.sql
 ```
 
-> ⚠️ Thay `SQLEXPRESS01` bằng tên instance SQL Server của bạn.
+> ⚠️ Nếu tài khoản `root` có mật khẩu, nhập mật khẩu khi được hỏi.
 
 ### 2. Cấu hình connection string
 
-Mở `App.config` và chỉnh `Data Source` cho khớp:
+Mở `App.config` và chỉnh thông tin kết nối cho khớp:
 
 ```xml
 <add name="QuanLyPhimDB" 
-     connectionString="Data Source=localhost\SQLEXPRESS01;Initial Catalog=QuanLyPhimDB;Integrated Security=True;TrustServerCertificate=True;" 
-     providerName="System.Data.SqlClient" />
+     connectionString="Server=localhost;Port=3306;Database=QuanLyPhimDB;Uid=root;Pwd=;" 
+     providerName="MySqlConnector" />
 ```
+
+> Thay `Uid` và `Pwd` nếu bạn dùng tài khoản/mật khẩu khác.
 
 ### 3. Chạy ứng dụng
 
@@ -69,6 +71,6 @@ Hoặc mở `QuanLyPhimVaLichChieu.sln` bằng **Visual Studio** và nhấn **F5
 ## 🛠️ Công nghệ
 
 - **C# / .NET 6** — WinForms
-- **SQL Server** — Cơ sở dữ liệu
-- **System.Data.SqlClient** — Kết nối database
+- **MySQL** — Cơ sở dữ liệu
+- **MySqlConnector** — Kết nối database
 - **Kiến trúc 3 lớp** — Models / DataAccess / BusinessLogic

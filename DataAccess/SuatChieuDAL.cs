@@ -1,5 +1,5 @@
 using System.Data;
-using System.Data.SqlClient;
+using MySqlConnector;
 using QuanLyPhimVaLichChieu.Models;
 
 namespace QuanLyPhimVaLichChieu.DataAccess
@@ -28,18 +28,18 @@ namespace QuanLyPhimVaLichChieu.DataAccess
                              INNER JOIN Phim p ON sc.MaPhim = p.MaPhim
                              INNER JOIN PhongChieu pc ON sc.MaPhong = pc.MaPhong
                              WHERE 1=1";
-            var parameters = new List<SqlParameter>();
+            var parameters = new List<MySqlParameter>();
 
             if (maPhim.HasValue && maPhim.Value > 0)
             {
                 query += " AND sc.MaPhim = @MaPhim";
-                parameters.Add(new SqlParameter("@MaPhim", maPhim.Value));
+                parameters.Add(new MySqlParameter("@MaPhim", maPhim.Value));
             }
 
             if (ngayChieu.HasValue)
             {
                 query += " AND sc.NgayChieu = @NgayChieu";
-                parameters.Add(new SqlParameter("@NgayChieu", ngayChieu.Value.Date));
+                parameters.Add(new MySqlParameter("@NgayChieu", ngayChieu.Value.Date));
             }
 
             query += " ORDER BY sc.NgayChieu DESC, sc.GioChieu";
@@ -53,13 +53,13 @@ namespace QuanLyPhimVaLichChieu.DataAccess
         {
             string query = @"INSERT INTO SuatChieu (MaPhim, MaPhong, NgayChieu, GioChieu, GiaVe) 
                              VALUES (@MaPhim, @MaPhong, @NgayChieu, @GioChieu, @GiaVe);
-                             SELECT SCOPE_IDENTITY();";
+                             SELECT LAST_INSERT_ID();";
             var result = DatabaseHelper.ExecuteScalar(query,
-                new SqlParameter("@MaPhim", sc.MaPhim),
-                new SqlParameter("@MaPhong", sc.MaPhong),
-                new SqlParameter("@NgayChieu", sc.NgayChieu.Date),
-                new SqlParameter("@GioChieu", sc.GioChieu),
-                new SqlParameter("@GiaVe", sc.GiaVe));
+                new MySqlParameter("@MaPhim", sc.MaPhim),
+                new MySqlParameter("@MaPhong", sc.MaPhong),
+                new MySqlParameter("@NgayChieu", sc.NgayChieu.Date),
+                new MySqlParameter("@GioChieu", sc.GioChieu),
+                new MySqlParameter("@GiaVe", sc.GiaVe));
             return Convert.ToInt32(result);
         }
 
@@ -70,19 +70,19 @@ namespace QuanLyPhimVaLichChieu.DataAccess
                              NgayChieu = @NgayChieu, GioChieu = @GioChieu, GiaVe = @GiaVe
                              WHERE MaSuat = @MaSuat";
             int rows = DatabaseHelper.ExecuteNonQuery(query,
-                new SqlParameter("@MaSuat", sc.MaSuat),
-                new SqlParameter("@MaPhim", sc.MaPhim),
-                new SqlParameter("@MaPhong", sc.MaPhong),
-                new SqlParameter("@NgayChieu", sc.NgayChieu.Date),
-                new SqlParameter("@GioChieu", sc.GioChieu),
-                new SqlParameter("@GiaVe", sc.GiaVe));
+                new MySqlParameter("@MaSuat", sc.MaSuat),
+                new MySqlParameter("@MaPhim", sc.MaPhim),
+                new MySqlParameter("@MaPhong", sc.MaPhong),
+                new MySqlParameter("@NgayChieu", sc.NgayChieu.Date),
+                new MySqlParameter("@GioChieu", sc.GioChieu),
+                new MySqlParameter("@GiaVe", sc.GiaVe));
             return rows > 0;
         }
 
         public bool Delete(int maSuat)
         {
             string query = "DELETE FROM SuatChieu WHERE MaSuat = @MaSuat";
-            int rows = DatabaseHelper.ExecuteNonQuery(query, new SqlParameter("@MaSuat", maSuat));
+            int rows = DatabaseHelper.ExecuteNonQuery(query, new MySqlParameter("@MaSuat", maSuat));
             return rows > 0;
         }
 

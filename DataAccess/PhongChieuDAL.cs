@@ -1,5 +1,5 @@
 using System.Data;
-using System.Data.SqlClient;
+using MySqlConnector;
 using QuanLyPhimVaLichChieu.Models;
 
 namespace QuanLyPhimVaLichChieu.DataAccess
@@ -18,7 +18,7 @@ namespace QuanLyPhimVaLichChieu.DataAccess
         public List<PhongChieu> GetActive()
         {
             var list = new List<PhongChieu>();
-            DataTable dt = DatabaseHelper.ExecuteQuery("SELECT * FROM PhongChieu WHERE TrangThai = N'Hoat dong' ORDER BY TenPhong");
+            DataTable dt = DatabaseHelper.ExecuteQuery("SELECT * FROM PhongChieu WHERE TrangThai = 'Hoat dong' ORDER BY TenPhong");
             foreach (DataRow row in dt.Rows)
                 list.Add(MapFromDataRow(row));
             return list;
@@ -28,12 +28,12 @@ namespace QuanLyPhimVaLichChieu.DataAccess
         {
             string query = @"INSERT INTO PhongChieu (TenPhong, SucChua, LoaiPhong, TrangThai) 
                              VALUES (@TenPhong, @SucChua, @LoaiPhong, @TrangThai);
-                             SELECT SCOPE_IDENTITY();";
+                             SELECT LAST_INSERT_ID();";
             var result = DatabaseHelper.ExecuteScalar(query,
-                new SqlParameter("@TenPhong", p.TenPhong),
-                new SqlParameter("@SucChua", p.SucChua),
-                new SqlParameter("@LoaiPhong", p.LoaiPhong),
-                new SqlParameter("@TrangThai", p.TrangThai));
+                new MySqlParameter("@TenPhong", p.TenPhong),
+                new MySqlParameter("@SucChua", p.SucChua),
+                new MySqlParameter("@LoaiPhong", p.LoaiPhong),
+                new MySqlParameter("@TrangThai", p.TrangThai));
             return Convert.ToInt32(result);
         }
 
@@ -44,18 +44,18 @@ namespace QuanLyPhimVaLichChieu.DataAccess
                              LoaiPhong = @LoaiPhong, TrangThai = @TrangThai
                              WHERE MaPhong = @MaPhong";
             int rows = DatabaseHelper.ExecuteNonQuery(query,
-                new SqlParameter("@MaPhong", p.MaPhong),
-                new SqlParameter("@TenPhong", p.TenPhong),
-                new SqlParameter("@SucChua", p.SucChua),
-                new SqlParameter("@LoaiPhong", p.LoaiPhong),
-                new SqlParameter("@TrangThai", p.TrangThai));
+                new MySqlParameter("@MaPhong", p.MaPhong),
+                new MySqlParameter("@TenPhong", p.TenPhong),
+                new MySqlParameter("@SucChua", p.SucChua),
+                new MySqlParameter("@LoaiPhong", p.LoaiPhong),
+                new MySqlParameter("@TrangThai", p.TrangThai));
             return rows > 0;
         }
 
         public bool Delete(int maPhong)
         {
             string query = "DELETE FROM PhongChieu WHERE MaPhong = @MaPhong";
-            int rows = DatabaseHelper.ExecuteNonQuery(query, new SqlParameter("@MaPhong", maPhong));
+            int rows = DatabaseHelper.ExecuteNonQuery(query, new MySqlParameter("@MaPhong", maPhong));
             return rows > 0;
         }
 

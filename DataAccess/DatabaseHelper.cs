@@ -1,6 +1,6 @@
 using System.Configuration;
 using System.Data;
-using System.Data.SqlClient;
+using MySqlConnector;
 
 namespace QuanLyPhimVaLichChieu.DataAccess
 {
@@ -15,16 +15,16 @@ namespace QuanLyPhimVaLichChieu.DataAccess
                 if (string.IsNullOrEmpty(_connectionString))
                 {
                     _connectionString = ConfigurationManager.ConnectionStrings["QuanLyPhimDB"]?.ConnectionString
-                        ?? "Data Source=localhost;Initial Catalog=QuanLyPhimDB;Integrated Security=True;TrustServerCertificate=True;";
+                        ?? "Server=localhost;Port=3306;Database=QuanLyPhimDB;Uid=root;Pwd=;";
                 }
                 return _connectionString;
             }
             set => _connectionString = value;
         }
 
-        public static SqlConnection GetConnection()
+        public static MySqlConnection GetConnection()
         {
-            return new SqlConnection(ConnectionString);
+            return new MySqlConnection(ConnectionString);
         }
 
         public static bool TestConnection()
@@ -43,18 +43,21 @@ namespace QuanLyPhimVaLichChieu.DataAccess
             }
         }
 
-        public static DataTable ExecuteQuery(string query, params SqlParameter[] parameters)
+        public static DataTable ExecuteQuery(string query, params MySqlParameter[] parameters)
         {
             DataTable dt = new DataTable();
             using (var conn = GetConnection())
             {
                 conn.Open();
-                using (var cmd = new SqlCommand(query, conn))
+                using (var cmd = new MySqlCommand(query, conn))
                 {
                     cmd.CommandTimeout = 30;
                     if (parameters != null)
-                        cmd.Parameters.AddRange(parameters);
-                    using (var adapter = new SqlDataAdapter(cmd))
+                    {
+                        foreach (var p in parameters)
+                            cmd.Parameters.Add(p);
+                    }
+                    using (var adapter = new MySqlDataAdapter(cmd))
                     {
                         adapter.Fill(dt);
                     }
@@ -63,49 +66,58 @@ namespace QuanLyPhimVaLichChieu.DataAccess
             return dt;
         }
 
-        public static int ExecuteNonQuery(string query, params SqlParameter[] parameters)
+        public static int ExecuteNonQuery(string query, params MySqlParameter[] parameters)
         {
             using (var conn = GetConnection())
             {
                 conn.Open();
-                using (var cmd = new SqlCommand(query, conn))
+                using (var cmd = new MySqlCommand(query, conn))
                 {
                     cmd.CommandTimeout = 30;
                     if (parameters != null)
-                        cmd.Parameters.AddRange(parameters);
+                    {
+                        foreach (var p in parameters)
+                            cmd.Parameters.Add(p);
+                    }
                     return cmd.ExecuteNonQuery();
                 }
             }
         }
 
-        public static object? ExecuteScalar(string query, params SqlParameter[] parameters)
+        public static object? ExecuteScalar(string query, params MySqlParameter[] parameters)
         {
             using (var conn = GetConnection())
             {
                 conn.Open();
-                using (var cmd = new SqlCommand(query, conn))
+                using (var cmd = new MySqlCommand(query, conn))
                 {
                     cmd.CommandTimeout = 30;
                     if (parameters != null)
-                        cmd.Parameters.AddRange(parameters);
+                    {
+                        foreach (var p in parameters)
+                            cmd.Parameters.Add(p);
+                    }
                     return cmd.ExecuteScalar();
                 }
             }
         }
 
-        public static DataTable ExecuteStoredProcedure(string spName, params SqlParameter[] parameters)
+        public static DataTable ExecuteStoredProcedure(string spName, params MySqlParameter[] parameters)
         {
             DataTable dt = new DataTable();
             using (var conn = GetConnection())
             {
                 conn.Open();
-                using (var cmd = new SqlCommand(spName, conn))
+                using (var cmd = new MySqlCommand(spName, conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.CommandTimeout = 30;
                     if (parameters != null)
-                        cmd.Parameters.AddRange(parameters);
-                    using (var adapter = new SqlDataAdapter(cmd))
+                    {
+                        foreach (var p in parameters)
+                            cmd.Parameters.Add(p);
+                    }
+                    using (var adapter = new MySqlDataAdapter(cmd))
                     {
                         adapter.Fill(dt);
                     }
